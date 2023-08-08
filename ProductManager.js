@@ -25,8 +25,6 @@ async loadProducts() {
         this.products = JSON.parse(data);
         this.nextProductId = await this.getNextProductId(); 
     } catch (error) {
-        console.error('Error al cargar los productos:', error);
-        console.error(error.stack);
         if (error.code === 'ENOENT') {
             console.log('El archivo no existe. Se creará uno nuevo.');
             this.nextProductId = await this.getNextProductId();
@@ -54,8 +52,7 @@ async getNextProductId() {
         }
         return highestId + 1;
     } catch (error) {
-        console.error('Error al obtener el próximo ID:', error);
-        if (error.code === 'ENOENT') {
+            if (error.code === 'ENOENT') {
             console.log('El archivo no existe. Se creará uno nuevo.');
             await this.saveProducts();
             return 1;
