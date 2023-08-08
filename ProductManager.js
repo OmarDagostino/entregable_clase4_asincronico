@@ -19,15 +19,18 @@ class ProductManager {
 
 async loadProducts() {
     try {
+        console.log('Cargando productos...');
         await fs.access(this.path);
         const data = await fs.readFile(this.path, 'utf-8');
         this.products = JSON.parse(data);
         this.nextProductId = await this.getNextProductId(); 
     } catch (error) {
+        console.error('Error al cargar los productos:', error);
+        console.error(error.stack);
         if (error.code === 'ENOENT') {
             console.log('El archivo no existe. Se creará uno nuevo.');
-            this.nextProductId = await this.getNextProductId ();
-            await this.saveProducts(); // Crea el archivo si no existe
+            this.nextProductId = await this.getNextProductId();
+            await this.saveProducts();
         } else {
             console.error('Error al cargar los productos:', error);
         }
@@ -42,26 +45,26 @@ async getNextProductId() {
         await fs.access(this.path);
         const data = await fs.promises.readFile(this.path, 'utf-8');
         this.products = JSON.parse(data);
+
+        let highestId = 0;
+        for (const product of this.products) {
+            if (product.id > highestId) {
+                highestId = product.id;
+            }
+        }
+        return highestId + 1;
     } catch (error) {
+        console.error('Error al obtener el próximo ID:', error);
         if (error.code === 'ENOENT') {
-        //    console.log('El archivo no existe. Se creará uno nuevo.');
-        //    await this.saveProducts(); // Crea el archivo si no existe
+            console.log('El archivo no existe. Se creará uno nuevo.');
+            await this.saveProducts();
             return 1;
         } else {
             console.error('Error al cargar los productos:', error);
             return;
         }
     }
-
-    let highestId = 0;
-    for (const product of this.products) {
-        if (product.id > highestId) {
-            highestId = product.id;
-        }
-    }
-    return highestId + 1;
 }
-
 
 // Creación del método addProduct 
 
@@ -71,9 +74,7 @@ async getNextProductId() {
         price,
         thumbnail,
         code,
-        stock
-        ) 
-        {
+        stock) {
         if (!title || !description || !price || !thumbnail || !code || !stock) {
             console.error("Todos los campos son obligatorios.");
             return;
@@ -87,7 +88,7 @@ async getNextProductId() {
         }
 
         const newProduct = {
-            id: this.nextProductId,
+            id: await this.nextProductId,
             title,
             description,
             price,
@@ -189,52 +190,56 @@ async saveProducts() {
  * Final de la clase Product Manager                                                    *
  * **************************************************************************************/
 
+// Prueba de la clase 
+async function prueba () {
 // creación de la instancia productManager de la clase ProductManager
   
   const productManager = new ProductManager('./productos.json');
 
 // llamar al metodo “getProducts” y debe devolver un arreglo vacío 
   
-  productManager.getProducts();
+  await productManager.getProducts();
   console.log (productManager.products);
   
 // agregado del producto de prueba 
   
-  productManager.addProduct("producto prueba", "Este es un producto prueba", 200, "sin imagen", "abc123", 25);
-  productManager.getProducts();
+  await productManager.addProduct("producto prueba", "Este es un producto prueba", 200, "sin imagen", "abc123", 25);
+  await productManager.getProducts();
   console.log (productManager.products);
 
 // intento de agregar el mismo producto por segunda vez
   
-  productManager.addProduct("producto prueba", "Este es un producto prueba", 200, "sin imagen", "abc123", 25);
+  await productManager.addProduct("producto prueba", "Este es un producto prueba", 200, "sin imagen", "abc123", 25);
   
   
 // pruebas del metodo getProductById 
   
   let productIdToFind = 1;
-  let productById = productManager.getProductById(productIdToFind); 
+  let productById = await productManager.getProductById(productIdToFind); // debe encontrarlo
   
   
   productIdToFind = 2; 
-  productById = productManager.getProductById(productIdToFind);
+  productById = await productManager.getProductById(productIdToFind); // no debe encontrarlo
 
 // agregado de mas productos de prueba
 
-productManager.addProduct("producto prueba 2", "Este es un producto prueba 2", 300, "sin imagen", "efd456", 50);
-productManager.addProduct("producto prueba 3", "Este es un producto prueba 3", 400, "sin imagen", "jkl789", 70);
-productManager.addProduct("producto prueba 4", "Este es un producto prueba 4", 500, "sin imagen", "mno147", 90);
+await productManager.addProduct("producto prueba 2", "Este es un producto prueba 2", 300, "sin imagen", "efd456", 50);
+await productManager.addProduct("producto prueba 3", "Este es un producto prueba 3", 400, "sin imagen", "jkl789", 70);
+await productManager.addProduct("producto prueba 4", "Este es un producto prueba 4", 500, "sin imagen", "mno147", 90);
 
 console.table (productManager.products);
 
 // prueba del método updateProduct
 
-productManager.updateProduct(2,'nuevotitulo','nueva descripcion', 1000, "todavia no hay imagenes",null,500);
+await productManager.updateProduct(2,'nuevotitulo','nueva descripcion', 1000, "todavia no hay imagenes",null,500);
 console.table (productManager.products);  
 
 // prueba del método deleteProduct
 
-productManager.deleteProduct (3); // producto debe existir
-productManager.deleteProduct (7); // producto inexistente
+await productManager.deleteProduct (3); // producto debe existir
+await productManager.deleteProduct (7); // producto inexistente
 
 console.table (productManager.products); 
+}
 
+prueba ()
