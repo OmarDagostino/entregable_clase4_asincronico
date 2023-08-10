@@ -26,10 +26,11 @@ async loadProducts() {
         this.nextProductId = await this.getNextProductId(); 
     } catch (error) {
         if (error.code === 'ENOENT') {
-            console.log('El archivo no existe. Se creará uno nuevo.');
+            console.log('El archivo no existe (L). Se creará uno nuevo.');
             this.nextProductId = await this.getNextProductId();
             await this.saveProducts();
         } else {
+            console.error('codigo de error',error.code);
             console.error('Error al cargar los productos:', error);
         }
     }
@@ -40,10 +41,13 @@ async loadProducts() {
 
 async getNextProductId() {
     try {
+        
+        console.log ('this.path')
+        console.log (this.path)
         await fs.access(this.path);
-        const data = await fs.promises.readFile(this.path, 'utf-8');
+        const data = await fs.readFile(this.path, 'utf-8');
         this.products = JSON.parse(data);
-
+        
         let highestId = 0;
         for (const product of this.products) {
             if (product.id > highestId) {
@@ -53,10 +57,12 @@ async getNextProductId() {
         return highestId + 1;
     } catch (error) {
             if (error.code === 'ENOENT') {
-            console.log('El archivo no existe. Se creará uno nuevo.');
+            console.log('El archivo no existe (G). Se creará uno nuevo.');
             await this.saveProducts();
             return 1;
         } else {
+            console.log ('get')
+            console.error ('codigo de error',error.stack)
             console.error('Error al cargar los productos:', error);
             return;
         }
@@ -76,10 +82,9 @@ async getNextProductId() {
             console.error("Todos los campos son obligatorios.");
             return;
         }
-
+        
         const isCodeRepeated = this.products.some(product => product.code === code);
-
-        if (isCodeRepeated) {
+            if (isCodeRepeated) {
             console.error(`El código "${code}" ya existe en otro producto.`);
             return;
         }
@@ -160,7 +165,7 @@ async getNextProductId() {
 
 async saveProducts() {
     try {
-        const myJSON = JSON.stringify(this.products);
+        const myJSON = JSON.stringify(this.products,null,'\t');
         await fs.writeFile(this.path, myJSON);
         console.log('Archivo grabado correctamente');
     } catch (error) {
